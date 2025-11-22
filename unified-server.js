@@ -10,7 +10,6 @@ const path = require("path");
 const { firefox } = require("playwright");
 const os = require("os");
 
-// ... [AuthSource class unchanged] ...
 // ===================================================================================
 // AUTH SOURCE MANAGEMENT MODULE
 // ===================================================================================
@@ -20,7 +19,7 @@ class AuthSource {
     this.logger = logger;
     this.authMode = "file";
     this.availableIndices = [];
-    this.initialIndices = []; // 新增：用于存储初步发现的所有索引
+    this.initialIndices = []; 
     this.accountNameMap = new Map();
 
     if (process.env.AUTH_JSON_1) {
@@ -34,8 +33,8 @@ class AuthSource {
       );
     }
 
-    this._discoverAvailableIndices(); // 初步发现所有存在的源
-    this._preValidateAndFilter(); // 预检验并过滤掉格式错误的源
+    this._discoverAvailableIndices(); 
+    this._preValidateAndFilter(); 
 
     if (this.availableIndices.length === 0) {
       this.logger.error(
@@ -56,7 +55,6 @@ class AuthSource {
         }
       }
     } else {
-      // 'file' mode
       const authDir = path.join(__dirname, "auth");
       if (!fs.existsSync(authDir)) {
         this.logger.warn('[Auth] "auth/" 目录不存在。');
@@ -77,7 +75,7 @@ class AuthSource {
     }
 
     this.initialIndices = [...new Set(indices)].sort((a, b) => a - b);
-    this.availableIndices = [...this.initialIndices]; // 先假设都可用
+    this.availableIndices = [...this.initialIndices]; 
 
     this.logger.info(
       `[Auth] 在 '${this.authMode}' 模式下，初步发现 ${
@@ -165,7 +163,6 @@ class AuthSource {
   }
 }
 
-// ... [BrowserManager class unchanged] ...
 // ===================================================================================
 // BROWSER MANAGEMENT MODULE
 // ===================================================================================
@@ -464,8 +461,6 @@ class BrowserManager {
   }
 }
 
-// ... [LoggingService, MessageQueue, ConnectionRegistry classes unchanged] ...
-
 // ===================================================================================
 // PROXY SERVER MODULE
 // ===================================================================================
@@ -473,17 +468,15 @@ class BrowserManager {
 class LoggingService {
   constructor(serviceName = "ProxyServer") {
     this.serviceName = serviceName;
-    this.logBuffer = []; // 用于在内存中保存日志
-    this.maxBufferSize = 100; // 最多保存100条
+    this.logBuffer = []; 
+    this.maxBufferSize = 100; 
   }
 
   _formatMessage(level, message) {
     const timestamp = new Date().toISOString();
     const formatted = `[${level}] ${timestamp} [${this.serviceName}] - ${message}`;
 
-    // 将格式化后的日志存入缓冲区
     this.logBuffer.push(formatted);
-    // 如果缓冲区超过最大长度，则从头部删除旧的日志
     if (this.logBuffer.length > this.maxBufferSize) {
       this.logBuffer.shift();
     }
@@ -1080,22 +1073,24 @@ class RequestHandler {
         const candidate = googleResponse.candidates?.[0];
 
         let responseContent = "";
+        let responseReasoning = ""; 
+
         if (
           candidate &&
           candidate.content &&
           Array.isArray(candidate.content.parts)
         ) {
-          const imagePart = candidate.content.parts.find((p) => p.inlineData);
-          if (imagePart) {
-            const image = imagePart.inlineData;
-            responseContent = `![Generated Image](data:${image.mimeType};base64,${image.data})`;
-            this.logger.info(
-              "[Adapter] 从 parts.inlineData 中成功解析到图片。"
-            );
-          } else {
-            responseContent =
-              candidate.content.parts.map((p) => p.text).join("\n") || "";
-          }
+          candidate.content.parts.forEach(p => {
+            if (p.inlineData) {
+                const image = p.inlineData;
+                responseContent += `![Generated Image](data:${image.mimeType};base64,${image.data})\n`;
+                this.logger.info("[Adapter] 从 parts.inlineData 中成功解析到图片。");
+            } else if (p.thought) {
+                responseReasoning += (p.text || "");
+            } else {
+                responseContent += (p.text || ""); // [修改] 非流式一般 Google 会分段返回，需要拼接
+            }
+          });
         }
 
         const openaiResponse = {
@@ -1106,7 +1101,11 @@ class RequestHandler {
           choices: [
             {
               index: 0,
-              message: { role: "assistant", content: responseContent },
+              message: { 
+                  role: "assistant", 
+                  content: responseContent,
+                  reasoning_content: responseReasoning || null // [修改] 注入 DeepSeek 格式的推理字段
+              },
               finish_reason: candidate?.finishReason || "UNKNOWN",
             },
           ],
@@ -1773,18 +1772,35 @@ async processModelListRequest(req, res) {
     }
 
     let content = "";
+    let reasoningContent = ""; // [修改] 新增变量存储推理内容
+
     if (candidate.content && Array.isArray(candidate.content.parts)) {
-      const imagePart = candidate.content.parts.find((p) => p.inlineData);
-      if (imagePart) {
-        const image = imagePart.inlineData;
-        content = `![Generated Image](data:${image.mimeType};base64,${image.data})`;
-        this.logger.info("[Adapter] 从流式响应块中成功解析到图片。");
-      } else {
-        content = candidate.content.parts.map((p) => p.text).join("") || "";
-      }
+      candidate.content.parts.forEach((p) => {
+        if (p.inlineData) {
+            const image = p.inlineData;
+            content += `![Generated Image](data:${image.mimeType};base64,${image.data})`;
+            this.logger.info("[Adapter] 从流式响应块中成功解析到图片。");
+        } else if (p.thought) {
+            // [修改] 如果Google返回 thought: true，则归类为推理内容
+            reasoningContent += p.text || "";
+        } else {
+            // [修改] 否则归类为普通内容
+            content += p.text || "";
+        }
+      });
     }
 
     const finishReason = candidate.finishReason;
+    const delta = {};
+    
+    // [修改] 根据内容分别设置 content 和 reasoning_content (DeepSeek Style)
+    if (content) delta.content = content;
+    if (reasoningContent) delta.reasoning_content = reasoningContent;
+
+    // 如果两个都是空的，但在流结束时可能会发生，允许空delta传finishReason
+    if (Object.keys(delta).length === 0 && !finishReason) {
+        return null;
+    }
 
     const openaiResponse = {
       id: `chatcmpl-${this._generateRequestId()}`,
@@ -1794,7 +1810,7 @@ async processModelListRequest(req, res) {
       choices: [
         {
           index: 0,
-          delta: { content: content },
+          delta: delta,
           finish_reason: finishReason || null,
         },
       ],
@@ -2687,7 +2703,7 @@ class ProxyServerSystem extends EventEmitter {
       this.enableReasoning = !this.enableReasoning;
       const statusText = this.enableReasoning ? "已启用" : "已禁用";
       this.logger.info(`[WebUI] 推理模式 (Thinking) 注入状态已切换为: ${statusText}`);
-      res.status(200).send(`推理模式 (Thinking) 已${statusText}。所有新的 OpenAI 请求都将受此影响。`);
+      res.status(200).send(`推理模式(Thinking)${statusText}。所有新的 OpenAI 请求都将受此影响。`);
     });
 
     app.use(this._createAuthMiddleware());
