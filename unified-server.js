@@ -1274,7 +1274,7 @@ async processModelListRequest(req, res) {
     });
     const connectionMaintainer = setInterval(() => {
       if (!res.writableEnded) res.write(": keep-alive\n\n");
-    }, 15000);
+    }, 3000);
 
     try {
       let lastMessage,
