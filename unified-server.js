@@ -10,7 +10,6 @@ const path = require("path");
 const { firefox } = require("playwright");
 const os = require("os");
 
-// ... (AUTH SOURCE MANAGEMENT MODULE - No changes) ...
 // ===================================================================================
 // AUTH SOURCE MANAGEMENT MODULE
 // ===================================================================================
@@ -164,7 +163,6 @@ class AuthSource {
   }
 }
 
-// ... (BROWSER MANAGEMENT MODULE - No changes) ...
 // ===================================================================================
 // BROWSER MANAGEMENT MODULE
 // ===================================================================================
@@ -566,7 +564,6 @@ class BrowserManager {
   }
 }
 
-// ... (PROXY SERVER MODULE - No changes in LoggingService, MessageQueue, ConnectionRegistry) ...
 // ===================================================================================
 // PROXY SERVER MODULE
 // ===================================================================================
@@ -982,13 +979,6 @@ class RequestHandler {
          return this._sendErrorResponse(res, 503, "Server is rotating accounts, please retry shortly.");
     }
 
-    // [新增] 处理原生请求的 2.5 -> 3.0 重定向
-    if (this.serverSystem.redirect25to30 && req.path && req.path.includes("gemini-2.5-pro")) {
-         this.logger.info(`[Router] 检测到 gemini-2.5-pro，正在重定向到 gemini-3-pro-preview (Native)`);
-         req.url = req.url.replace("gemini-2.5-pro", "gemini-3-pro-preview");
-         req.path = req.path.replace("gemini-2.5-pro", "gemini-3-pro-preview");
-    }
-    
     // 2. 增加活跃计数
     this.activeRequestCount++;
 
@@ -1048,7 +1038,15 @@ class RequestHandler {
       }
     }
 
+    // [修正] 先构建 proxyRequest 对象
     const proxyRequest = this._buildProxyRequest(req, requestId);
+    
+    // [修正] 修改 proxyRequest 对象的 path，而不是修改只读的 req.path
+    if (this.serverSystem.redirect25to30 && proxyRequest.path && proxyRequest.path.includes("gemini-2.5-pro")) {
+         this.logger.info(`[Router] 检测到 gemini-2.5-pro，正在重定向到 gemini-3-pro-preview (Native)`);
+         proxyRequest.path = proxyRequest.path.replace("gemini-2.5-pro", "gemini-3-pro-preview");
+    }
+
     proxyRequest.is_generative = isGenerativeRequest;
     const messageQueue = this.connectionRegistry.createMessageQueue(requestId);
     const wantsStreamByHeader = req.headers.accept && req.headers.accept.includes("text/event-stream");
@@ -1105,7 +1103,7 @@ class RequestHandler {
     const isOpenAIStream = req.body.stream === true;
     let model = req.body.model || "gemini-1.5-pro-latest";
     
-    // [新增] 处理 OpenAI 请求的 2.5 -> 3.0 重定向
+    // [新增] 处理 OpenAI 请求的 2.5 -> 3.0 重定向 (操作本地变量 model 是安全的)
     if (this.serverSystem.redirect25to30 && model === "gemini-2.5-pro") {
         this.logger.info(`[Adapter] 检测到 gemini-2.5-pro，正在重定向到 gemini-3-pro-preview (OpenAI)`);
         model = "gemini-3-pro-preview";
