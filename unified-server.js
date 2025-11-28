@@ -1,3 +1,5 @@
+--- START OF FILE unified-server.js ---
+
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const crypto = require("crypto");
@@ -2344,194 +2346,79 @@ class ProxyServerSystem extends EventEmitter {
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>登录</title>
+    <title>系统登录</title>
     <style>
-      * { box-sizing: border-box; }
-      html, body {
-        height: 100%;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        background: #f0f2f5;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      }
-      
-      .container {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center; 
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: 20vh; /* 视觉重心上移 */
-      }
-
-      @media (max-height: 500px) {
-        .container {
-          padding-bottom: 0;
-          justify-content: flex-start;
-          padding-top: 20px;
-        }
-      }
-
-      form {
-        background: white;
-        padding: 30px 25px;
-        border-radius: 16px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-        text-align: center;
-        width: 85%;
-        max-width: 360px;
-        flex-shrink: 0;
-        transition: transform 0.3s ease;
-      }
-
-      h2 {
-        margin-top: 0;
-        margin-bottom: 25px;
-        font-size: 1.3rem;
-        color: #333;
-        font-weight: 600;
-      }
-
-      .input-wrapper {
-        position: relative;
-        width: 100%;
-        margin-bottom: 15px;
-      }
-
-      input {
-        width: 100%;
-        padding: 14px;
-        padding-right: 45px; 
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        font-size: 16px;
-        outline: none;
-        background: #f9f9f9;
-        -webkit-appearance: none;
-        transition: all 0.2s;
-        margin-bottom: 0; 
-      }
-      
-      input:focus {
-        background: #fff;
-        border-color: #007bff;
-        box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
-      }
-
-      .toggle-eye {
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        cursor: pointer;
-        color: #999;
-        width: 24px;
-        height: 24px;
+      :root { --primary-color: #007aff; --bg-color: #f2f2f7; }
+      body {
+        margin: 0; padding: 0;
+        height: 100vh;
         display: flex;
         align-items: center;
         justify-content: center;
-        -webkit-tap-highlight-color: transparent;
-        z-index: 10;
+        background-color: var(--bg-color);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       }
-
-      .toggle-eye svg {
-        width: 20px;
-        height: 20px;
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 2;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-      }
-
-      button {
+      .login-card {
+        background: white;
+        padding: 40px 30px;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
         width: 100%;
-        padding: 14px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
+        max-width: 380px;
+        text-align: center;
+      }
+      h2 { margin: 0 0 30px; color: #1c1c1e; font-weight: 600; }
+      .input-group { position: relative; margin-bottom: 20px; }
+      input {
+        width: 100%; box-sizing: border-box;
+        padding: 16px; padding-right: 50px;
+        border: 1px solid #e5e5ea;
+        border-radius: 12px;
         font-size: 16px;
-        font-weight: bold;
-        -webkit-tap-highlight-color: transparent;
-        box-shadow: 0 4px 6px rgba(0,123,255,0.2);
+        background: #f2f2f7;
+        outline: none; transition: all 0.2s;
       }
-      
-      button:active {
-        background-color: #0056b3;
-        transform: scale(0.98);
+      input:focus { background: #fff; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(0,122,255,0.1); }
+      .eye-btn {
+        position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+        cursor: pointer; color: #8e8e93; display: flex;
       }
-
-      .error {
-        color: #dc3545;
-        margin-top: 15px;
-        font-size: 14px;
-        background: #fff5f5;
-        padding: 8px;
-        border-radius: 6px;
+      button {
+        width: 100%; padding: 16px;
+        background: var(--primary-color);
+        color: white; border: none; border-radius: 12px;
+        font-size: 16px; font-weight: 600;
+        cursor: pointer; transition: opacity 0.2s;
+      }
+      button:hover { opacity: 0.9; }
+      .error-msg {
+        color: #ff3b30; background: #fff2f2;
+        padding: 10px; border-radius: 8px; margin-top: 20px; font-size: 14px;
       }
     </style>
   </head>
   <body>
-    <div class="container">
+    <div class="login-card">
       <form action="/login" method="post">
-        <h2>API Key 验证</h2>
-        
-        <div class="input-wrapper">
-            <input type="password" id="apiKeyInput" name="apiKey" placeholder="请输入 API Key" required autofocus autocomplete="off">
-            <div class="toggle-eye" id="toggleBtn">
-                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        <h2>验证身份</h2>
+        <div class="input-group">
+            <input type="password" id="apiKeyInput" name="apiKey" placeholder="输入 API Key" required>
+            <div class="eye-btn" id="toggleBtn">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
             </div>
         </div>
-
-        <button type="submit">进入系统</button>
-        ${req.query.error ? '<div class="error">验证失败，请重试</div>' : ""}
+        <button type="submit">登 录</button>
+        ${req.query.error ? '<div class="error-msg">API Key 无效</div>' : ""}
       </form>
     </div>
-
     <script>
       const input = document.getElementById('apiKeyInput');
-      const toggleBtn = document.getElementById('toggleBtn');
-      
-      const eyeOpen = '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
-      const eyeClosed = '<svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
-
-      toggleBtn.innerHTML = eyeClosed;
-
-      toggleBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-        input.setAttribute('type', type);
-        if (type === 'text') {
-            toggleBtn.innerHTML = eyeOpen;
-            toggleBtn.style.color = '#007bff'; 
-        } else {
-            toggleBtn.innerHTML = eyeClosed;
-            toggleBtn.style.color = '#999';
-        }
-      });
-
-      const container = document.querySelector('.container');
-      input.addEventListener('focus', () => {
-        setTimeout(() => {
-          input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 300);
-      });
-
-      document.body.addEventListener('touchmove', function(e) {
-        if (!e.target.closest('.container')) {
-          e.preventDefault();
-        }
-      }, { passive: false });
+      const btn = document.getElementById('toggleBtn');
+      btn.onclick = () => {
+        const isPwd = input.type === 'password';
+        input.type = isPwd ? 'text' : 'password';
+        btn.style.color = isPwd ? '#007aff' : '#8e8e93';
+      }
     </script>
   </body>
   </html>`;
@@ -2548,274 +2435,312 @@ class ProxyServerSystem extends EventEmitter {
     });
 
     // ==========================================================
-    // Section 3: 状态页面 (已添加推理模式显示与按钮)
+    // Section 3: 状态页面 (Modern UI)
     // ==========================================================
     app.get("/", isAuthenticated, (req, res) => {
-      const { config, requestHandler, authSource, browserManager } = this;
-      const initialIndices = authSource.initialIndices || [];
-      const availableIndices = authSource.availableIndices || [];
-      const invalidIndices = initialIndices.filter(
-        (i) => !availableIndices.includes(i)
-      );
-      const logs = this.logger.logBuffer || [];
-
-      const accountNameMap = authSource.accountNameMap;
-      const accountDetailsHtml = initialIndices
-        .map((index) => {
-          const isInvalid = invalidIndices.includes(index);
-          const name = isInvalid
-            ? "N/A (JSON格式错误)"
-            : accountNameMap.get(index) || "N/A (未命名)";
-          return `<span class="label" style="padding-left: 20px;">账号${index}</span>: ${name}`;
-        })
-        .join("\n");
-
-      const accountOptionsHtml = availableIndices
-        .map((index) => `<option value="${index}">账号 #${index}</option>`)
-        .join("");
-
       const statusHtml = `
-    <!DOCTYPE html>
-    <html lang="zh-CN">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>代理服务状态</title>
-        <style>
-        body { font-family: 'SF Mono', 'Consolas', 'Menlo', monospace; background-color: #f0f2f5; color: #333; padding: 2em; }
-        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 1em 2em 2em 2em; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1, h2 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 0.5em;}
-        pre { background: #2d2d2d; color: #f0f0f0; font-size: 1.1em; padding: 1.5em; border-radius: 8px; white-space: pre-wrap; word-wrap: break-word; line-height: 1.6; }
-        #log-container { font-size: 0.9em; max-height: 400px; overflow-y: auto; }
-        .status-ok { color: #2ecc71; font-weight: bold; }
-        .status-error { color: #e74c3c; font-weight: bold; }
-        .status-info { color: #3498db; font-weight: bold; }
-        .label { display: inline-block; width: 220px; box-sizing: border-box; }
-        .dot { height: 10px; width: 10px; background-color: #bbb; border-radius: 50%; display: inline-block; margin-left: 10px; animation: blink 1s infinite alternate; }
-        @keyframes blink { from { opacity: 0.3; } to { opacity: 1; } }
-        .action-group { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; }
-        .action-group button, .action-group select { font-size: 1em; border: 1px solid #ccc; padding: 10px 15px; border-radius: 8px; cursor: pointer; transition: background-color 0.3s ease; }
-        .action-group button:hover { opacity: 0.85; }
-        /* [修改] 所有按钮统一为蓝色 */
-        .action-group button { background-color: #007bff; color: white; border-color: #007bff; }
-        .action-group button.warning-btn { background-color: #007bff; border-color: #007bff; }
-        .action-group button.purple-btn { background-color: #007bff; border-color: #007bff; }
-        .action-group select { background-color: #ffffff; color: #000000; -webkit-appearance: none; appearance: none; }
-        @media (max-width: 600px) {
-            body { padding: 0.5em; }
-            .container { padding: 1em; margin: 0; }
-            pre { padding: 1em; font-size: 0.9em; }
-            .label { width: auto; display: inline; }
-            .action-group { flex-direction: column; align-items: stretch; }
-            .action-group select, .action-group button { width: 100%; box-sizing: border-box; }
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代理控制台</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-primary: #1c1e21;
+            --text-secondary: #606770;
+            --accent-color: #007aff;
+            --success-color: #34c759;
+            --error-color: #ff3b30;
+            --border-color: #ebedf0;
         }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-        <h1>代理服务状态 <span class="dot" title="数据动态刷新中..."></span></h1>
-        <div id="status-section">
-            <pre>
-<span class="label">服务状态</span>: <span class="status-ok">Running</span>
-<span class="label">浏览器连接</span>: <span class="${
-        browserManager.browser ? "status-ok" : "status-error"
-      }">${!!browserManager.browser}</span>
---- 服务配置 ---
-<span class="label">流模式</span>: ${config.streamingMode} (仅启用流式传输时生效)
-<span class="label">强制OAI格式推理 (OAI)</span>: <span class="${this.enableReasoning ? "status-info" : ""}">${this.enableReasoning ? "已启用 (注入thinkingConfig)" : "已禁用"}</span>
-<span class="label">强制原生格式推理 (Native)</span>: <span class="${this.enableNativeReasoning ? "status-info" : ""}">${this.enableNativeReasoning ? "已启用 (注入thinkingConfig)" : "已禁用"}</span>
-<span class="label">截断自动续写</span>: <span class="${this.enableResume ? "status-info" : ""}">${this.enableResume ? "已启用 (Limit: " + this.resumeLimit + ")" : "已禁用"}</span>
-<span class="label">2.5Pro重定向为3.0Pro</span>: <span class="${this.redirect25to30 ? "status-info" : ""}">${this.redirect25to30 ? "已启用" : "已禁用"}</span>
-<span class="label">立即切换 (状态码)</span>: ${
-        config.immediateSwitchStatusCodes.length > 0
-          ? `[${config.immediateSwitchStatusCodes.join(", ")}]`
-          : "已禁用"
-      }
-<span class="label">API 密钥</span>: ${config.apiKeySource}
---- 账号状态 ---
-<span class="label">当前使用账号</span>: #${requestHandler.currentAuthIndex}
-<span class="label">使用次数计数</span>: ${requestHandler.usageCount} / ${
-        config.switchOnUses > 0 ? config.switchOnUses : "N/A"
-      }
-<span class="label">连续失败计数</span>: ${requestHandler.failureCount} / ${
-        config.failureThreshold > 0 ? config.failureThreshold : "N/A"
-      }
-<span class="label">扫描到的总帐号</span>: [${initialIndices.join(
-        ", "
-      )}] (总数: ${initialIndices.length})
-      ${accountDetailsHtml}
-<span class="label">格式错误 (已忽略)</span>: [${invalidIndices.join(
-        ", "
-      )}] (总数: ${invalidIndices.length})
-            </pre>
-        </div>
+        body { margin: 0; padding: 0; background: var(--bg-color); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--text-primary); }
+        .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
         
-        <!-- 操作面板 (已移动到上方) -->
-        <div id="actions-section" style="margin-top: 2em;">
-            <h2>操作面板</h2>
-            <div class="action-group">
-                <select id="accountIndexSelect">${accountOptionsHtml}</select>
-                <button onclick="switchSpecificAccount()">切换账号</button>
-                <button onclick="toggleStreamingMode()">切换流模式</button>
-                <button class="warning-btn" onclick="toggleReasoning()">强制开启OAI格式推理</button>
-                <button class="warning-btn" onclick="toggleNativeReasoning()">强制开启原生格式推理</button>
-                <button class="purple-btn" onclick="configureResume()">设置截断自动续写</button>
-                <button class="warning-btn" onclick="toggleRedirect25to30()">将2.5Pro重定向为3.0Pro</button>
+        /* Header */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .header h1 { font-size: 24px; font-weight: 700; margin: 0; }
+        .status-badge { background: #e4e6eb; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
+        .status-dot.active { background: var(--success-color); box-shadow: 0 0 0 2px rgba(52, 199, 89, 0.2); }
+
+        /* Cards */
+        .card { background: var(--card-bg); border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 20px; overflow: hidden; }
+        .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border-color); font-weight: 600; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .card-body { padding: 0; }
+        
+        /* List Rows */
+        .row-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border-color); }
+        .row-item:last-child { border-bottom: none; }
+        .row-label { font-size: 15px; color: var(--text-primary); }
+        .row-desc { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+        .row-value { font-family: 'SF Mono', Consolas, monospace; font-size: 14px; color: var(--text-secondary); }
+
+        /* Switches */
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #e9e9ea; transition: .3s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 24px; width: 24px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: var(--accent-color); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* Inputs & Buttons */
+        .action-btn { background: var(--accent-color); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 500; cursor: pointer; font-size: 14px; transition: opacity 0.2s; }
+        .action-btn:hover { opacity: 0.9; }
+        select { padding: 8px 30px 8px 12px; border-radius: 8px; border: 1px solid #d1d1d6; background: #fff; font-size: 14px; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 8px center; background-size: 12px; }
+        .num-input { width: 60px; padding: 6px; border: 1px solid #d1d1d6; border-radius: 6px; text-align: center; margin-right: 10px; }
+
+        /* Logs */
+        .log-container { background: #1e1e1e; color: #f0f0f0; padding: 15px; font-family: 'SF Mono', Consolas, monospace; font-size: 12px; line-height: 1.5; height: 300px; overflow-y: auto; border-radius: 0 0 16px 16px; white-space: pre-wrap; }
+        
+        /* Toast */
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 100; backdrop-filter: blur(5px); }
+        .toast.show { opacity: 1; top: 30px; }
+
+        @media (max-width: 600px) {
+            .container { padding: 0 10px; margin-top: 20px; }
+            .row-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .row-item > div:last-child { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+            .row-value { margin-top: 5px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="toast" id="toast">操作已保存</div>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>代理控制台</h1>
+            <div class="status-badge">
+                <div class="status-dot" id="browserStatusDot"></div>
+                <span id="browserStatusText">Checking...</span>
             </div>
         </div>
 
-        <!-- 实时日志 (已移动到下方) -->
-        <div id="log-section" style="margin-top: 2em;">
-            <h2>实时日志 (最近 ${logs.length} 条)</h2>
-            <pre id="log-container">${logs.join("\n")}</pre>
+        <!-- System Config -->
+        <div class="card">
+            <div class="card-header">系统配置</div>
+            <div class="card-body">
+                <div class="row-item">
+                    <div>
+                        <div class="row-label">流式响应模式 (Stream Mode)</div>
+                        <div class="row-desc">开启为 Real (真流式)，关闭为 Fake (伪流式)</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="streamModeSwitch" onchange="toggleStreamMode()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="row-item">
+                    <div>
+                        <div class="row-label">强制 OAI 格式推理</div>
+                        <div class="row-desc">为 OpenAI 格式请求注入 thinkingConfig</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="reasoningSwitch" onchange="toggleReasoning()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="row-item">
+                    <div>
+                        <div class="row-label">强制原生格式推理</div>
+                        <div class="row-desc">为 Gemini 原生请求注入 thinkingConfig</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="nativeReasoningSwitch" onchange="toggleNativeReasoning()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="row-item">
+                    <div>
+                        <div class="row-label">模型版本重定向</div>
+                        <div class="row-desc">将 gemini-2.5-pro 自动重定向至 3.0-pro</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="redirectSwitch" onchange="toggleRedirect()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="row-item">
+                    <div>
+                        <div class="row-label">截断自动续写</div>
+                        <div class="row-desc">内容被截断时自动尝试继续生成</div>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <input type="number" class="num-input" id="resumeLimitInput" value="3" min="1" max="10" placeholder="次">
+                        <label class="switch">
+                            <input type="checkbox" id="resumeSwitch" onchange="toggleResume()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
         </div>
 
+        <!-- Account Management -->
+        <div class="card">
+            <div class="card-header">账号管理</div>
+            <div class="card-body">
+                <div class="row-item">
+                    <div>
+                        <div class="row-label">当前账号状态</div>
+                        <div class="row-desc" id="usageStats">加载中...</div>
+                    </div>
+                    <div class="row-value" id="currentAccountBadge">#--</div>
+                </div>
+                <div class="row-item">
+                    <div>
+                        <div class="row-label">手动切换账号</div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="accountSelector"></select>
+                        <button class="action-btn" onclick="switchAccount()">切换</button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <script>
-        let currentResumeLimit = 3;
 
-        function updateContent() {
-            fetch('/api/status').then(response => response.json()).then(data => {
-                const statusPre = document.querySelector('#status-section pre');
-                const accountDetailsHtml = data.status.accountDetails.map(acc => {
-                  return '<span class="label" style="padding-left: 20px;">账号' + acc.index + '</span>: ' + acc.name;
-                }).join('\\n');
-                
-                const reasoningClass = data.status.enableReasoning ? "status-info" : "";
-                const reasoningText = data.status.enableReasoning ? "已启用 (注入thinkingConfig)" : "已禁用";
-                
-                const nativeReasoningClass = data.status.enableNativeReasoning ? "status-info" : "";
-                const nativeReasoningText = data.status.enableNativeReasoning ? "已启用 (注入thinkingConfig)" : "已禁用";
-                
-                const resumeClass = data.status.enableResume ? "status-info" : "";
-                const resumeText = data.status.enableResume ? ("已启用 (Limit: " + data.status.resumeLimit + ")") : "已禁用";
-                
-                const redirectClass = data.status.redirect25to30 ? "status-info" : "";
-                const redirectText = data.status.redirect25to30 ? "已启用" : "已禁用";
-                
-                currentResumeLimit = data.status.resumeLimit;
+        <!-- Logs -->
+        <div class="card">
+            <div class="card-header">实时日志</div>
+            <div class="log-container" id="logContainer">Waiting for logs...</div>
+        </div>
+    </div>
 
-                statusPre.innerHTML = 
-                    '<span class="label">服务状态</span>: <span class="status-ok">Running</span>\\n' +
-                    '<span class="label">浏览器连接</span>: <span class="' + (data.status.browserConnected ? "status-ok" : "status-error") + '">' + data.status.browserConnected + '</span>\\n' +
-                    '--- 服务配置 ---\\n' +
-                    '<span class="label">流模式</span>: ' + data.status.streamingMode + '\\n' +
-                    '<span class="label">强制OAI格式推理 (OAI)</span>: <span class="' + reasoningClass + '">' + reasoningText + '</span>\\n' +
-                    '<span class="label">强制原生格式推理 (Native)</span>: <span class="' + nativeReasoningClass + '">' + nativeReasoningText + '</span>\\n' +
-                    '<span class="label">截断自动续写</span>: <span class="' + resumeClass + '">' + resumeText + '</span>\\n' +
-                    '<span class="label">2.5Pro重定向为3.0Pro</span>: <span class="' + redirectClass + '">' + redirectText + '</span>\\n' +
-                    '<span class="label">立即切换 (状态码)</span>: ' + data.status.immediateSwitchStatusCodes + '\\n' +
-                    '<span class="label">API 密钥</span>: ' + data.status.apiKeySource + '\\n' +
-                    '--- 账号状态 ---\\n' +
-                    '<span class="label">当前使用账号</span>: #' + data.status.currentAuthIndex + '\\n' +
-                    '<span class="label">使用次数计数</span>: ' + data.status.usageCount + '\\n' +
-                    '<span class="label">连续失败计数</span>: ' + data.status.failureCount + '\\n' +
-                    '<span class="label">扫描到的总账号</span>: ' + data.status.initialIndices + '\\n' +
-                    accountDetailsHtml + '\\n' +
-                    '<span class="label">格式错误 (已忽略)</span>: ' + data.status.invalidIndices;
-                
-                const logContainer = document.getElementById('log-container');
-                const logTitle = document.querySelector('#log-section h2');
-                const isScrolledToBottom = logContainer.scrollHeight - logContainer.clientHeight <= logContainer.scrollTop + 1;
-                logTitle.innerText = \`实时日志 (最近 \${data.logCount} 条)\`;
-                logContainer.innerText = data.logs;
-                if (isScrolledToBottom) { logContainer.scrollTop = logContainer.scrollHeight; }
-            }).catch(error => console.error('Error fetching new content:', error));
+    <script>
+        let isUpdating = false;
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2000);
         }
 
-        function switchSpecificAccount() {
-            const selectElement = document.getElementById('accountIndexSelect');
-            const targetIndex = selectElement.value;
-            if (!confirm(\`确定要切换到账号 #\${targetIndex} 吗？这会重置浏览器会话。\`)) {
-                return;
-            }
-            fetch('/api/switch-account', {
+        async function apiCall(url, body) {
+            try {
+                const res = await fetch(url, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ targetIndex: parseInt(targetIndex, 10) })
-            })
-            .then(res => res.text()).then(data => { alert(data); updateContent(); })
-            .catch(err => { 
-                if (err.message.includes('Load failed') || err.message.includes('NetworkError')) {
-                    alert('⚠️ 浏览器启动较慢，操作仍在后台进行中。\\n\\n请不要重复点击。');
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(body)
+                });
+                const text = await res.text();
+                if(res.ok) {
+                    showToast('设置已更新');
+                    updateStatus(); // Refresh UI
                 } else {
-                    alert('❌ 操作失败: ' + err); 
+                    alert('操作失败: ' + text);
                 }
-                updateContent(); 
-            });
+            } catch(e) {
+                alert('网络错误: ' + e);
+            }
         }
 
-        function toggleStreamingMode() { 
-            const newMode = prompt('请输入新的流模式 (real 或 fake):', '${this.config.streamingMode}');
-            if (newMode === 'fake' || newMode === 'real') {
-                fetch('/api/set-mode', { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ mode: newMode }) 
-                })
-                .then(res => res.text()).then(data => { alert(data); updateContent(); })
-                .catch(err => alert('设置失败: ' + err));
-            } else if (newMode !== null) { 
-                alert('无效的模式！请只输入 "real" 或 "fake"。'); 
-            } 
+        function toggleStreamMode() {
+            if(isUpdating) return;
+            const mode = document.getElementById('streamModeSwitch').checked ? 'real' : 'fake';
+            apiCall('/api/set-mode', { mode });
         }
 
         function toggleReasoning() {
-             fetch('/api/toggle-reasoning', { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({}) 
-             })
-            .then(res => res.text()).then(data => { alert(data); updateContent(); })
-            .catch(err => alert('切换失败: ' + err));
+            if(isUpdating) return;
+            apiCall('/api/toggle-reasoning', {});
         }
 
         function toggleNativeReasoning() {
-             fetch('/api/toggle-native-reasoning', { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({}) 
-             })
-            .then(res => res.text()).then(data => { alert(data); updateContent(); })
-            .catch(err => alert('切换失败: ' + err));
+            if(isUpdating) return;
+            apiCall('/api/toggle-native-reasoning', {});
         }
 
-        function configureResume() {
-            const input = prompt("请输入最大重试次数 (默认为 3)\\n输入 0 即代表关闭此功能:", currentResumeLimit);
-            if (input === null) return; 
-            const limit = parseInt(input, 10);
-            if (isNaN(limit) || limit < 0) {
-                alert("请输入有效的正整数 (>=0)");
-                return;
-            }
+        function toggleRedirect() {
+            if(isUpdating) return;
+            apiCall('/api/toggle-redirect-25-30', {});
+        }
+
+        function toggleResume() {
+            if(isUpdating) return;
+            const enabled = document.getElementById('resumeSwitch').checked;
+            let limit = parseInt(document.getElementById('resumeLimitInput').value) || 3;
+            if (!enabled) limit = 0;
+            apiCall('/api/set-resume-config', { limit });
+        }
+
+        async function switchAccount() {
+            const idx = document.getElementById('accountSelector').value;
+            if(!confirm(\`确定切换到账号 #\${idx} 吗？这会重置当前浏览器会话。\ `)) return;
             
-            fetch('/api/set-resume-config', { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ limit: limit }) 
-            })
-            .then(res => res.text()).then(data => { alert(data); updateContent(); })
-            .catch(err => alert('设置失败: ' + err));
+            showToast('正在切换账号...');
+            try {
+                const res = await fetch('/api/switch-account', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ targetIndex: parseInt(idx) })
+                });
+                const text = await res.text();
+                showToast(res.ok ? '切换成功' : '切换失败');
+                updateStatus();
+            } catch(e) {
+                alert('请求失败');
+            }
         }
 
-        function toggleRedirect25to30() {
-             fetch('/api/toggle-redirect-25-30', { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({}) 
-             })
-            .then(res => res.text()).then(data => { alert(data); updateContent(); })
-            .catch(err => alert('切换失败: ' + err));
+        function updateStatus() {
+            isUpdating = true; // Prevent triggering onchange events
+            fetch('/api/status').then(r => r.json()).then(data => {
+                const s = data.status;
+                
+                // Browser Status
+                const dot = document.getElementById('browserStatusDot');
+                dot.className = s.browserConnected ? 'status-dot active' : 'status-dot';
+                document.getElementById('browserStatusText').textContent = s.browserConnected ? '服务运行中' : '浏览器未连接';
+
+                // Toggles
+                document.getElementById('streamModeSwitch').checked = s.streamingMode.startsWith('real');
+                document.getElementById('reasoningSwitch').checked = s.enableReasoning;
+                document.getElementById('nativeReasoningSwitch').checked = s.enableNativeReasoning;
+                document.getElementById('redirectSwitch').checked = s.redirect25to30;
+                
+                // Resume Logic
+                document.getElementById('resumeSwitch').checked = s.enableResume;
+                if(s.resumeLimit > 0) document.getElementById('resumeLimitInput').value = s.resumeLimit;
+
+                // Account Stats
+                document.getElementById('currentAccountBadge').textContent = '#' + s.currentAuthIndex;
+                document.getElementById('usageStats').textContent = \`使用: \${s.usageCount} | 失败: \${s.failureCount}\`;
+
+                // Account Selector
+                const selector = document.getElementById('accountSelector');
+                const savedVal = selector.value;
+                selector.innerHTML = '';
+                s.accountDetails.forEach(acc => {
+                    const opt = document.createElement('option');
+                    opt.value = acc.index;
+                    opt.textContent = \`#\${acc.index} - \${acc.name}\`;
+                    if(acc.index == s.currentAuthIndex) opt.textContent += ' (当前)';
+                    selector.appendChild(opt);
+                });
+                if(savedVal) selector.value = savedVal;
+
+                // Logs
+                const logBox = document.getElementById('logContainer');
+                const atBottom = logBox.scrollHeight - logBox.clientHeight <= logBox.scrollTop + 50;
+                logBox.textContent = data.logs;
+                if(atBottom) logBox.scrollTop = logBox.scrollHeight;
+
+            }).finally(() => {
+                isUpdating = false;
+            });
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            updateContent(); 
-            setInterval(updateContent, 5000);
+            updateStatus();
+            setInterval(updateStatus, 3000);
         });
-        </script>
-    </body>
-    </html>
-    `;
+    </script>
+</body>
+</html>`;
       res.status(200).send(statusHtml);
     });
 
